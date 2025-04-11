@@ -21,7 +21,7 @@ class _NavbarState extends State<Navbar> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: Color(0xff008CFF),
         borderRadius: BorderRadius.circular(16),
       ),
       child: IntrinsicWidth(
@@ -49,13 +49,13 @@ class _NavbarState extends State<Navbar> {
           Icon(
             icon,
             color:
-                widget.selectedIndex == index ? Colors.white : Colors.white70,
+                widget.selectedIndex == index ? Colors.white : Colors.black,
           ),
           Text(
             label,
             style: TextStyle(
               color:
-                  widget.selectedIndex == index ? Colors.white : Colors.white70,
+                  widget.selectedIndex == index ? Colors.white : Colors.black,
             ),
           ),
         ],

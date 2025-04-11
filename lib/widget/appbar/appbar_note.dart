@@ -21,8 +21,8 @@ class AppbarNote extends StatelessWidget implements PreferredSizeWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            height: 85,
-            width: 85,
+            height: 125,
+            width: 125,
             child: Image.asset(
               imageUrl,
               fit: BoxFit.contain,
@@ -33,7 +33,7 @@ class AppbarNote extends StatelessWidget implements PreferredSizeWidget {
           const Text(
             "Note",
             style: TextStyle(
-              fontSize: 18, 
+              fontSize: 20, 
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
