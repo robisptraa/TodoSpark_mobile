@@ -18,19 +18,24 @@ class _NavbarState extends State<Navbar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.blue,
-        borderRadius: BorderRadius.circular(10), 
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(Icons.home, "Home", 0),
-          _navItem(Icons.note, "Note", 1),
-          _navItem(Icons.person, "Profile", 2),
-        ],
+      child: IntrinsicWidth(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _navItem(Icons.home, "Home", 0),
+            const SizedBox(width: 125),
+            _navItem(Icons.note, "Note", 1),
+            const SizedBox(width:125),
+            _navItem(Icons.person, "Profile", 2),
+          ],
+        ),
       ),
     );
   }
@@ -43,12 +48,14 @@ class _NavbarState extends State<Navbar> {
         children: [
           Icon(
             icon,
-            color: widget.selectedIndex == index ? Colors.white : Colors.white70,
+            color:
+                widget.selectedIndex == index ? Colors.white : Colors.white70,
           ),
           Text(
             label,
             style: TextStyle(
-              color: widget.selectedIndex == index ? Colors.white : Colors.white70,
+              color:
+                  widget.selectedIndex == index ? Colors.white : Colors.white70,
             ),
           ),
         ],

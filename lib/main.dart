@@ -4,9 +4,34 @@ import 'package:todospark/pages/note_page.dart';
 import 'package:todospark/pages/profile_page.dart';
 import 'package:todospark/widget/navbar_widget.dart';
 
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'TodoSpark',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: '/home',
+      routes: {
+        '/home': (context) => const MainPage(),
+        '/note': (context) => const NotePage(),
+        '/profile': (context) => const ProfilePage(),
+      },
+    );
+  }
+}
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
-
+  
   @override
   State<MainPage> createState() => _MainPageState();
 }

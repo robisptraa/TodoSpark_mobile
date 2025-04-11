@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class AppbarHome extends StatelessWidget implements PreferredSizeWidget {
+class AppbarProfile extends StatelessWidget implements PreferredSizeWidget {
   final String imageUrl;
   final double height;
 
-  const AppbarHome({
+  const AppbarProfile({
     super.key, 
     this.imageUrl = 'assets/logo_appbar.png', 
     this.height = 60,
@@ -31,7 +31,7 @@ class AppbarHome extends StatelessWidget implements PreferredSizeWidget {
           
         
           const Text(
-            "Home",
+            "Profile",
             style: TextStyle(
               fontSize: 18, 
               fontWeight: FontWeight.bold,
