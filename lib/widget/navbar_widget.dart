@@ -30,9 +30,9 @@ class _NavbarState extends State<Navbar> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(Icons.home, "Home", 0),
-            const SizedBox(width: 125),
+            const SizedBox(width: 80),
             _navItem(Icons.note, "Note", 1),
-            const SizedBox(width:125),
+            const SizedBox(width:80),
             _navItem(Icons.person, "Profile", 2),
           ],
         ),
