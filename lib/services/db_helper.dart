@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+
 class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
   factory DBHelper() => _instance;
@@ -16,16 +17,17 @@ class DBHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'app_database.db');
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'todo_spark.db'); 
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
-  }
+  return await openDatabase(
+    path,
+    version: 1,
+    onCreate: _onCreate,
+    onUpgrade: _onUpgrade,
+  );
+}
+
 
   Future<void> _onCreate(Database db, int version) async {
     // Create users table

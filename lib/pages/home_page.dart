@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:todospark/services/db_helper.dart';
 import 'package:todospark/widget/appbar/appbar_home.dart';
 import 'package:todospark/widget/bottomsheet/create_list.dart';
 import 'package:todospark/widget/button/fab_button.dart';
+import 'package:todospark/widget/card_widget/content_card_widget.dart';
+
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,8 +15,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final titleController = TextEditingController();
-  final descriptionController = TextEditingController();
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+
+  DBHelper dbHelper = DBHelper();
+  List<Map<String, dynamic>> tasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTasks();
+  }
+
+  Future<void> fetchTasks() async {
+    final db = await dbHelper.database;
+    final data = await db.query('task');
+    setState(() {
+      tasks = data;
+    });
+  }
 
   void _showCreateTodoSheet() {
     showModalBottomSheet(
@@ -30,9 +51,7 @@ class _HomePageState extends State<HomePage> {
             titleController: titleController,
             descriptionController: descriptionController,
             onSave: () {
-              print(
-                  "Saved: ${titleController.text} - ${descriptionController.text}");
-              Navigator.pop(context);
+              fetchTasks();
               titleController.clear();
               descriptionController.clear();
             },
@@ -45,13 +64,42 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppbarHome(),
-      body: const SizedBox.shrink(),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80.0),
-        child: FabButton(onPressed: _showCreateTodoSheet),
+      appBar: AppbarHome(),
+      body: Stack(
+        children: [
+          tasks.isEmpty
+              ? const Center(child: Text('No tasks yet!'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TaskCard(
+                        title: task['title_task'],
+                        description: task['description_task'],
+                        date: DateFormat('yyyy-MM-dd').parse(task['date']),
+                        priority: task['priority'],
+                        onDelete: () async {
+                          final db = await dbHelper.database;
+                          await db.delete('task',
+                              where: 'id = ?', whereArgs: [task['id']]);
+                          fetchTasks();
+                        },
+                      ),
+                    );
+                  },
+                ),
+          Positioned(
+            bottom: 100, 
+            right: 20,
+            child: FabButton(
+              onPressed: _showCreateTodoSheet,
+            ),
+          ),
+        ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:todospark/services/db_helper.dart';
 
-class CreateTodoSheet extends StatelessWidget {
+class CreateTodoSheet extends StatefulWidget {
   final TextEditingController titleController;
   final TextEditingController descriptionController;
   final VoidCallback onSave;
@@ -11,6 +13,23 @@ class CreateTodoSheet extends StatelessWidget {
     required this.descriptionController,
     required this.onSave,
   });
+
+  @override
+  State<CreateTodoSheet> createState() => _CreateTodoSheetState();
+}
+
+DBHelper dbHelper = DBHelper();
+
+Future<int> insertTask(Map<String, dynamic> task) async {
+  final db = await dbHelper.database;
+  return await db.insert('task', task);
+}
+
+class _CreateTodoSheetState extends State<CreateTodoSheet> {
+  DateTime? selectedDate;
+  String? selectedPriority;
+
+  final List<String> priorityList = ['Low', 'Medium', 'High'];
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +45,7 @@ class CreateTodoSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: titleController,
+            controller: widget.titleController,
             decoration: const InputDecoration(
               labelText: "Title",
               border: OutlineInputBorder(),
@@ -34,12 +53,71 @@ class CreateTodoSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: descriptionController,
+            controller: widget.descriptionController,
             maxLines: 3,
             decoration: const InputDecoration(
               labelText: "Description",
               border: OutlineInputBorder(),
             ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () async {
+              DateTime? pickedDate = await showDatePicker(
+                context: context,
+                initialDate: selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+              );
+              if (pickedDate != null) {
+                setState(() {
+                  selectedDate = pickedDate;
+                });
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 20, color: Colors.grey[700]),
+                  const SizedBox(width: 12),
+                  Text(
+                    selectedDate != null
+                        ? DateFormat('yyyy-MM-dd').format(selectedDate!)
+                        : 'Select Date',
+                    style: TextStyle(
+                      color: selectedDate != null
+                          ? Colors.black
+                          : Colors.grey[600],
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              labelText: "Priority",
+              border: OutlineInputBorder(),
+            ),
+            value: selectedPriority,
+            items: priorityList.map((priority) {
+              return DropdownMenuItem(
+                value: priority,
+                child: Text(priority),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedPriority = value;
+              });
+            },
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -71,7 +149,31 @@ class CreateTodoSheet extends StatelessWidget {
                   child: SizedBox(
                     height: 72,
                     child: ElevatedButton(
-                      onPressed: () async {},
+                      onPressed: () async {
+                        if (widget.titleController.text.isEmpty ||
+                            widget.descriptionController.text.isEmpty ||
+                            selectedDate == null ||
+                            selectedPriority == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please fill all fields!'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final task = {
+                          'title_task': widget.titleController.text,
+                          'description_task': widget.descriptionController.text,
+                          'date':
+                              DateFormat('yyyy-MM-dd').format(selectedDate!),
+                          'priority': selectedPriority!,
+                        };
+
+                        await insertTask(task);
+                        widget.onSave();
+                        Navigator.pop(context);
+                      },
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
