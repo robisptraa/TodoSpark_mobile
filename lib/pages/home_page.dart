@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:todospark/services/db_helper.dart';
 import 'package:todospark/widget/appbar/appbar_home.dart';
 import 'package:todospark/widget/bottomsheet/create_list.dart';
+import 'package:todospark/widget/bottomsheet/edit_list.dart';
 import 'package:todospark/widget/button/fab_button.dart';
 import 'package:todospark/widget/card_widget/content_card_widget.dart';
 
@@ -87,12 +88,46 @@ class _HomePageState extends State<HomePage> {
                               where: 'id = ?', whereArgs: [task['id']]);
                           fetchTasks();
                         },
+                        onEdit: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16)),
+                            ),
+                            builder: (context) => EditTaskBottomSheet(
+                              initialTitle: task['title_task'],
+                              initialDescription: task['description_task'],
+                              initialDate:
+                                  DateFormat('yyyy-MM-dd').parse(task['date']),
+                              initialPriority: task['priority'],
+                              onSave: (newTitle, newDescription, newDate,
+                                  newPriority) async {
+                                final db = await dbHelper.database;
+                                await db.update(
+                                  'task',
+                                  {
+                                    'title_task': newTitle,
+                                    'description_task': newDescription,
+                                    'date': DateFormat('yyyy-MM-dd')
+                                        .format(newDate),
+                                    'priority': newPriority,
+                                  },
+                                  where: 'id = ?',
+                                  whereArgs: [task['id']],
+                                );
+                                fetchTasks();
+                              },
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
           Positioned(
-            bottom: 100, 
+            bottom: 100,
             right: 20,
             child: FabButton(
               onPressed: _showCreateTodoSheet,
