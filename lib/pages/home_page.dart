@@ -28,13 +28,22 @@ class _HomePageState extends State<HomePage> {
     fetchTasks();
   }
 
-  Future<void> fetchTasks() async {
-    final db = await dbHelper.database;
-    final data = await db.query('task');
-    setState(() {
-      tasks = data;
-    });
-  }
+  // Future<void> fetchTasks() async {
+  //   final db = await dbHelper.database;
+  //   final data = await db.query('task');
+
+  //   setState(() {
+  //     tasks = data;
+  //   });
+  // }
+
+  fetchTasks() async {
+  final db = await dbHelper.database;
+  final List<Map<String, dynamic>> taskList = await db.query('task');
+  setState(() {
+    tasks = taskList;
+  });
+}
 
   void _showCreateTodoSheet() {
     showModalBottomSheet(
@@ -78,17 +87,32 @@ class _HomePageState extends State<HomePage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: TaskCard(
+                        id: task['id'],
                         title: task['title_task'],
                         description: task['description_task'],
                         date: DateFormat('yyyy-MM-dd').parse(task['date']),
                         priority: task['priority'],
+                        isDone: task['done'] == 1, // Check if task is done
                         onDelete: () async {
                           final db = await dbHelper.database;
                           await db.delete('task',
                               where: 'id = ?', whereArgs: [task['id']]);
-                          fetchTasks();
+                          fetchTasks(); // Refresh task list
                         },
+                        onMarkDone: () async {
+                          final db = await dbHelper.database;
+                          int newStatus = task['done'] == 1 ? 0 : 1;
+                          await db.update(
+                            'task',
+                            {'done': newStatus},
+                            where: 'id = ?',
+                            whereArgs: [task['id']],
+                          );
+                         await fetchTasks();
+                        },
+
                         onEdit: () {
+                          // Edit task details
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
@@ -117,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                                   where: 'id = ?',
                                   whereArgs: [task['id']],
                                 );
-                                fetchTasks();
+                                fetchTasks(); // Refresh task list after saving
                               },
                             ),
                           );

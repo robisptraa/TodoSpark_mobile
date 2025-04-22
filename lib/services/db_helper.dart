@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
 
 class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
@@ -17,20 +17,18 @@ class DBHelper {
   }
 
   Future<Database> _initDatabase() async {
-  final dbPath = await getDatabasesPath();
-  final path = join(dbPath, 'todo_spark.db'); 
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'todo_spark.db');
 
-  return await openDatabase(
-    path,
-    version: 1,
-    onCreate: _onCreate,
-    onUpgrade: _onUpgrade,
-  );
-}
-
+    return await openDatabase(
+      path,
+      version: 2, // Update the version to reflect schema changes
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Create users table
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +40,6 @@ class DBHelper {
       )
     ''');
 
-    // Create task table
     await db.execute('''
       CREATE TABLE task (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,12 +49,12 @@ class DBHelper {
         priority TEXT,
         task TEXT,
         list_point_task TEXT,
+        done INTEGER DEFAULT 0,  -- Add done column with default value 0 (false)
         user_id INTEGER,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
 
-    // Create note table
     await db.execute('''
       CREATE TABLE note (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +65,6 @@ class DBHelper {
       )
     ''');
 
-    // Create favorit table
     await db.execute('''
       CREATE TABLE favorit (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,7 +76,6 @@ class DBHelper {
       )
     ''');
 
-    // Create value_favorit table
     await db.execute('''
       CREATE TABLE value_favorit (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,33 +87,70 @@ class DBHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Untuk migrasi database kalau nanti ada perubahan struktur
+    if (oldVersion < 2) {
+      // Add the 'done' column if it doesn't exist already
+      await db.execute('''
+        ALTER TABLE task ADD COLUMN done INTEGER DEFAULT 0 
+      ''');
+    }
   }
-
-  // CRUD Helper Methods
 
   // Insert data
   Future<int> insert(String table, Map<String, dynamic> data) async {
     final db = await database;
+
+    // Handle special case for 'task' table with 'list_point_task'
+    if (table == 'task' && data.containsKey('list_point_task')) {
+      data['list_point_task'] = jsonEncode(data['list_point_task']);
+    }
+
     return await db.insert(table, data);
   }
 
   // Get all data
   Future<List<Map<String, dynamic>>> getAll(String table) async {
     final db = await database;
-    return await db.query(table);
+    final result = await db.query(table);
+
+    if (table == 'task') {
+      return result.map((map) {
+        final updatedMap = Map<String, dynamic>.from(map);
+        if (updatedMap['list_point_task'] != null) {
+          updatedMap['list_point_task'] =
+              jsonDecode(updatedMap['list_point_task']);
+        }
+        return updatedMap;
+      }).toList();
+    }
+
+    return result;
   }
 
   // Get data by ID
   Future<Map<String, dynamic>?> getById(String table, int id) async {
     final db = await database;
     final res = await db.query(table, where: 'id = ?', whereArgs: [id]);
-    return res.isNotEmpty ? res.first : null;
+
+    if (res.isNotEmpty) {
+      final map = Map<String, dynamic>.from(res.first);
+      if (table == 'task' && map['list_point_task'] != null) {
+        map['list_point_task'] = jsonDecode(map['list_point_task']);
+      }
+      return map;
+    } else {
+      return null;
+    }
   }
 
   // Update data
   Future<int> update(String table, Map<String, dynamic> data, int id) async {
     final db = await database;
+
+    // Handle special case for 'task' table with 'list_point_task'
+    if (table == 'task' && data.containsKey('list_point_task')) {
+      data['list_point_task'] = jsonEncode(data['list_point_task']);
+    }
+
     return await db.update(table, data, where: 'id = ?', whereArgs: [id]);
   }
 
@@ -126,5 +158,18 @@ class DBHelper {
   Future<int> delete(String table, int id) async {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Mark task as done (or undone)
+  Future<int> markTaskAsDone(int taskId, bool isDone) async {
+    final db = await database;
+
+    // Ensure that you're updating the 'done' field properly
+    return await db.update(
+      'task',
+      {'done': isDone ? 1 : 0}, // Use 1 for true and 0 for false
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
   }
 }
